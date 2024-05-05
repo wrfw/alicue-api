@@ -2,6 +2,8 @@
 const {
   Model
 } = require('sequelize');
+const {v4:uuidv4} = require('uuid');
+
 module.exports = (sequelize, DataTypes) => {
   class authToken extends Model {
     /**
@@ -10,7 +12,7 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      // define association here
+    	authToken.belongsTo(models.User, {foreignKey: 'user', as: 'user_id'})  
     }
   }
   authToken.init({
@@ -21,5 +23,21 @@ module.exports = (sequelize, DataTypes) => {
     sequelize,
     modelName: 'authToken',
   });
+  authToken.createToken = async function (user) {
+    let expiredAt = new Date();
+    expiredAt.setSeconds(expiredAt.getSeconds() + process.env.JWT_REFRESH_EXPIRATION);
+    let _token = uuidv4();
+    let refreshToken = await authToken.create({
+	token: _token,
+	user: user.id,
+	expirDate: expiredAt.getTime(),
+    });
+    return refreshToken.token;
+  }
+  
+  authToken.verifyExpiration = (token) => {
+    return token.expiryDate.getTime() < new Date().getTime();
+  }
+
   return authToken;
 };
