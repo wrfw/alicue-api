@@ -10,8 +10,9 @@ app.use(express.json());
 app.use(cors());
 
 const authRoute = require('./routes/auth.route');
-
+const profileRoute = require('./routes/profile.route');
 app.use('/api', authRoute);
+app.use('/api', profileRoute);
 
 
 app.listen(port, (err)=>{
